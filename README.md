@@ -10,7 +10,6 @@ A custom Home Assistant integration for DINUSO BLE meat thermometer probes, supp
 - **Battery level and bars**
 - **Signal strength (RSSI) and connection quality**
 - **Connection status (connected/disconnected)**
-- **Automatic device discovery**
 
 ---
 
@@ -23,7 +22,7 @@ A custom Home Assistant integration for DINUSO BLE meat thermometer probes, supp
    - Paste the repository URL:
 
      ```
-     https://github.com/giuseppe-lapenta_monline/homeassistant-dinuso-ble
+     https://github.com/Tukks/probe-temp-dinuso
      ```
 
    - Set category as **"Integration"** and click **"Add"**.
@@ -38,7 +37,7 @@ A custom Home Assistant integration for DINUSO BLE meat thermometer probes, supp
 4. **Add the Integration:**
    - Go to **Settings → Devices & Services → Add Integration**.
    - Search for **DINUSO BLE Thermometer**.
-   - Follow the setup wizard (auto-discovery or manual MAC address entry).
+   - Follow the setup wizard (manual MAC address entry).
 
 ---
 
