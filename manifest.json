@@ -3,10 +3,10 @@
   "name": "DINUSO BLE Thermometer",
   "codeowners": ["@giuseppe-lapenta_monline"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["bluetooth"],
   "documentation": "https://github.com/giuseppe-lapenta_monline/homeassistant-dinuso-ble",
   "integration_type": "device",
-  "iot_class": "local_polling",
-  "requirements": ["bleak>=0.21.1"],
+  "iot_class": "local_push",
+  "requirements": [],
   "version": "1.0.0"
 }
