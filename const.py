@@ -8,8 +8,8 @@ MODEL: Final = "BLE Meat Thermometer"
 
 # BLE Configuration
 TARGET_UUID: Final = "0000ae65-0000-1000-8000-00805f9b34fb"
-SCAN_INTERVAL: Final = timedelta(seconds=5)
-DEVICE_TIMEOUT: Final = timedelta(seconds=60)
+SCAN_INTERVAL: Final = timedelta(seconds=2)  # Faster scanning for better responsiveness
+DEVICE_TIMEOUT: Final = timedelta(seconds=5)  # Match Java code: 5 seconds timeout
 
 # Signal Quality Thresholds (RSSI in dBm)
 RSSI_EXCELLENT: Final = -50

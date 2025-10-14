@@ -18,7 +18,6 @@ from .const import (
     DOMAIN,
     TARGET_UUID,
     SCAN_INTERVAL,
-    DEVICE_TIMEOUT,
     CONF_MAC_ADDRESS,
     RSSI_EXCELLENT,
     RSSI_GOOD,
@@ -26,6 +25,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+# Connection timeout should be 5 seconds to match Java code
+CONNECTION_TIMEOUT = timedelta(seconds=5)
 
 
 class DinusoBleCoordinator(DataUpdateCoordinator):
@@ -44,6 +46,7 @@ class DinusoBleCoordinator(DataUpdateCoordinator):
         self._scanner: BleakScanner | None = None
         self._last_seen: datetime | None = None
         self._scanning = False
+        self._last_valid_data: dict[str, Any] = {}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from BLE device."""
@@ -52,19 +55,23 @@ class DinusoBleCoordinator(DataUpdateCoordinator):
 
         # Check if device is still connected (received data recently)
         now = datetime.now(timezone.utc)
-        if self._last_seen and (now - self._last_seen) > DEVICE_TIMEOUT:
-            return {
-                "connected": False,
-                "temperature": None,
-                "temperature_int": None,
-                "battery_level": None,
-                "battery_bars": None,
-                "rssi": None,
-                "connection_quality": "Disconnected",
-                "last_seen": self._last_seen,
-            }
+        is_connected = False
+        
+        if self._last_seen and (now - self._last_seen) <= CONNECTION_TIMEOUT:
+            is_connected = True
 
-        return self.data or {}
+        # Always return data, but update connection status
+        if is_connected:
+            # Device is connected, return current data
+            return self._last_valid_data
+        else:
+            # Device is disconnected, return last known data but mark as disconnected
+            disconnected_data = self._last_valid_data.copy() if self._last_valid_data else {}
+            disconnected_data.update({
+                "connected": False,
+                "connection_quality": "Disconnected",
+            })
+            return disconnected_data
 
     async def _start_scanning(self) -> None:
         """Start BLE scanning."""
@@ -127,8 +134,8 @@ class DinusoBleCoordinator(DataUpdateCoordinator):
 
         self._last_seen = datetime.now(timezone.utc)
 
-        # Update coordinator data
-        new_data = {
+        # Update coordinator data with latest values
+        self._last_valid_data = {
             "connected": True,
             "temperature": temp_c,
             "temperature_int": temp_int,
@@ -142,7 +149,7 @@ class DinusoBleCoordinator(DataUpdateCoordinator):
         }
 
         # Trigger update to Home Assistant
-        self.async_set_updated_data(new_data)
+        self.async_set_updated_data(self._last_valid_data)
 
     def _decode_temperature(self, raw_bytes: bytes) -> tuple[float, int, int, int, int] | None:
         """Decode temperature from the 16-byte service data payload."""

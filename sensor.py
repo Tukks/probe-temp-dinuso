@@ -86,7 +86,8 @@ class DinusoBaseSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.data.get("connected", False)
+        # Entities remain available even when disconnected, they just show last known values
+        return self.coordinator.last_update_success and bool(self.coordinator.data)
 
 
 class DinusoTemperatureSensor(DinusoBaseSensor):
@@ -137,6 +138,9 @@ class DinusoTemperatureSensor(DinusoBaseSensor):
         
         if raw_value := self.coordinator.data.get("raw_value"):
             attrs["raw_value"] = raw_value
+
+        # Add connection status to temperature sensors
+        attrs["connected"] = self.coordinator.data.get("connected", False)
             
         return attrs
 
@@ -173,6 +177,8 @@ class DinusoBatterySensor(DinusoBaseSensor):
         attrs = {}
         if battery_bars := self.coordinator.data.get("battery_bars"):
             attrs["battery_bars"] = battery_bars
+
+        attrs["connected"] = self.coordinator.data.get("connected", False)
             
         return attrs
 
@@ -208,7 +214,7 @@ class DinusoBatteryBarsSensor(DinusoBaseSensor):
         icons = {
             0: "mdi:battery-outline",
             1: "mdi:battery-30",
-            2: "mdi:battery-60",
+            2: "mdi:battery-60", 
             3: "mdi:battery",
         }
         return icons.get(bars, "mdi:battery-unknown")
@@ -235,6 +241,9 @@ class DinusoRssiSensor(DinusoBaseSensor):
     def native_value(self) -> int | None:
         """Return the native value of the sensor."""
         if not self.coordinator.data:
+            return None
+        # Only show RSSI when connected
+        if not self.coordinator.data.get("connected", False):
             return None
         return self.coordinator.data.get("rssi")
 
