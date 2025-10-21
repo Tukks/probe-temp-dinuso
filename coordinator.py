@@ -122,11 +122,17 @@ class DinusoBleCoordinator(DataUpdateCoordinator):
             battery_bars = 0
             battery_percent = 0
             
-            if len(raw_bytes) > 11:
-                battery_byte = raw_bytes[11]
-                battery_voltage = battery_byte * 0.03125  # Convert to voltage
+            # Battery is at position 7 in the service data payload
+            # (position 11 in full advertisement - 4 bytes header offset)
+            if len(raw_bytes) > 7:
+                battery_byte = raw_bytes[7]  # Changed from 11 to 7
+                battery_voltage = battery_byte * 0.03125
                 
-                # Map voltage to battery bars (0-3)
+                _LOGGER.debug(
+                    "Battery debug - byte[7]: %d (0x%02x), voltage: %.3fV",
+                    battery_byte, battery_byte, battery_voltage
+                )
+                
                 if battery_voltage >= 2.0:
                     battery_bars = 3
                 elif battery_voltage >= 1.7:
@@ -136,14 +142,18 @@ class DinusoBleCoordinator(DataUpdateCoordinator):
                 else:
                     battery_bars = 0
                 
-                # Convert bars to percentage (0%, 33%, 66%, 100%)
                 battery_percent = int((battery_bars / 3) * 100)
+                
+                _LOGGER.debug(
+                    "Battery result - bars: %d, percent: %d",
+                    battery_bars, battery_percent
+                )
                 
             return temp_c, temp_int, raw_val, battery_bars, battery_percent
         except Exception as err:
             _LOGGER.error("Failed to decode temperature data: %s", err)
             return None
-
+        
     def _get_connection_quality(self, rssi: int) -> str:
         if rssi >= RSSI_EXCELLENT:
             return "Excellent"
