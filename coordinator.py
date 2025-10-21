@@ -121,18 +121,24 @@ class DinusoBleCoordinator(DataUpdateCoordinator):
             temp_int = int(round(temp_c))
             battery_bars = 0
             battery_percent = 0
+            
             if len(raw_bytes) > 11:
                 battery_byte = raw_bytes[11]
-                battery_level = battery_byte * 0.03125
-                battery_percent = max(0, min(100, int(battery_level * 50)))
-                if battery_level >= 2.0:
+                battery_voltage = battery_byte * 0.03125  # Convert to voltage
+                
+                # Map voltage to battery bars (0-3)
+                if battery_voltage >= 2.0:
                     battery_bars = 3
-                elif battery_level >= 1.7:
+                elif battery_voltage >= 1.7:
                     battery_bars = 2
-                elif battery_level >= 1.5:
+                elif battery_voltage >= 1.5:
                     battery_bars = 1
                 else:
                     battery_bars = 0
+                
+                # Convert bars to percentage (0%, 33%, 66%, 100%)
+                battery_percent = int((battery_bars / 3) * 100)
+                
             return temp_c, temp_int, raw_val, battery_bars, battery_percent
         except Exception as err:
             _LOGGER.error("Failed to decode temperature data: %s", err)
